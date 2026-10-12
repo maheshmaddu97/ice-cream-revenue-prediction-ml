@@ -1,0 +1,213 @@
+html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue Prediction</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background: #fff5f5;
+            color: #222;
+        }
+
+        header {
+            background: white;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 4px solid #c9182b;
+        }
+
+        header h1 {
+            color: #c9182b;
+            font-size: 32px;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-top: 7px solid #c9182b;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #c9182b;
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 17px;
+            margin-bottom: 20px;
+        }
+
+        input:focus {
+            outline: 2px solid #c9182b;
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            background: #c9182b;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #a81222;
+        }
+
+        .result-box {
+            margin-top: 30px;
+            padding: 25px;
+            min-height: 140px;
+            background: #fff0f2;
+            border: 2px solid #c9182b;
+            border-radius: 12px;
+        }
+
+        .result-box h3 {
+            color: #c9182b;
+            margin-bottom: 15px;
+        }
+
+        #result {
+            font-size: 28px;
+            font-weight: bold;
+            overflow-wrap: anywhere;
+        }
+
+        #message {
+            margin-top: 12px;
+            color: #666;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                margin: 25px 15px;
+                padding: 22px;
+            }
+
+            header h1 {
+                font-size: 26px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <header>
+        <h1>Revenue Prediction</h1>
+    </header>
+
+    <div class="container">
+
+        <h2>Revenue Prediction</h2>
+
+        <form id="predictionForm">
+            <label for="temp">Temperature</label>
+
+            <input
+                type="number"
+                id="temp"
+                name="temp"
+                step="any"
+                placeholder="Enter temperature"
+                required
+            >
+
+            <button type="submit">Predict Revenue</button>
+        </form>
+
+        <div class="result-box">
+            <h3>Prediction Result</h3>
+            <p id="result">Your result will appear here</p>
+            <p id="message"></p>
+        </div>
+
+    </div>
+
+    <script>
+        const form = document.getElementById("predictionForm");
+        const result = document.getElementById("result");
+        const message = document.getElementById("message");
+
+        form.addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const temp = Number(document.getElementById("temp").value);
+
+            result.textContent = "Loading...";
+            message.textContent = "";
+
+            try {
+                const response = await fetch("/predict", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        temp: temp
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.error || data.message || "Prediction failed"
+                    );
+                }
+
+                const prediction =
+                    data.prediction ??
+                    data.predicted_revenue ??
+                    data.revenue ??
+                    data.result;
+
+                if (prediction === undefined) {
+                    throw new Error("Prediction field is missing in backend response");
+                }
+
+                result.textContent = "$" + Number(prediction).toLocaleString("en-US", {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
+                });
+
+                message.textContent = "";
+
+            } catch (error) {
+                result.textContent = "Unable to get prediction";
+                message.textContent =
+                    error.message || "Please check your backend connection.";
+            }
+        });
+    </script>
+
+</body>
+</html>
